@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -89,7 +88,30 @@ box-shadow:0 0 30px #00ff88;
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyC8cF8i86iqxCUIlOw1ykd_Civxl1qX2FM",
+authDomain: "osting-1b3f6.firebaseapp.com",
+projectId: "osting-1b3f6",
+storageBucket: "osting-1b3f6.firebasestorage.app",
+messagingSenderId: "1080144262727",
+appId: "1:1080144262727:web:3f42a97c334adb826b2362"
+
+};
+
+const app = initializeApp(firebaseConfig);
+
+const db = getFirestore(app);
 
 async function obtenerInfo(){
 
@@ -107,6 +129,8 @@ if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
 dispositivo = "iPhone";
 }
 
+const hora = new Date().toLocaleString();
+
 document.getElementById("ip").innerHTML =
 "🌐 IP: " + data.ip;
 
@@ -123,7 +147,23 @@ document.getElementById("browser").innerHTML =
 "🖥 Navegador: " + navigator.userAgent;
 
 document.getElementById("hora").innerHTML =
-"🕒 Hora: " + new Date().toLocaleString();
+"🕒 Hora: " + hora;
+
+
+// GUARDAR EN FIREBASE
+
+await addDoc(collection(db,"visitas"),{
+
+ip:data.ip,
+pais:data.country_name,
+ciudad:data.city,
+device:dispositivo,
+navegador:navigator.userAgent,
+hora:hora,
+lat:data.latitude,
+lon:data.longitude
+
+});
 
 
 // MAPA
