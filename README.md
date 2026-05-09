@@ -3,7 +3,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title></title>
+<title>No te metas con Karen</title>
 
 <link
 rel="stylesheet"
@@ -68,7 +68,7 @@ box-shadow:0 0 30px #00ff88;
 
 <div class="card">
 
-<h1>NO TE METAS CON KAREN</h1>
+<h1>Fuiste doxceado</h1>
 
 <p id="ip">🌐 Cargando IP...</p>
 
