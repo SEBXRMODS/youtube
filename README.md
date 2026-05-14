@@ -3,190 +3,339 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>que vez pto/a</title>
-
-<link
-rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+<title>verificando conecxion</title>
 
 <style>
 
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
 body{
 background:black;
+overflow:hidden;
+height:100vh;
 color:#00ff88;
-font-family:Consolas;
-margin:0;
+}
+
+canvas{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+z-index:-1;
+}
+
+#pantalla{
+position:absolute;
+top:0;
+left:0;
+width:100%;
+height:100%;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+text-align:center;
 padding:20px;
 }
 
-.card{
-max-width:700px;
-margin:auto;
-border:2px solid #00ff88;
-padding:25px;
-border-radius:15px;
-box-shadow:0 0 25px #00ff88;
-background:rgba(0,0,0,0.9);
-animation:glow 2s infinite alternate;
-}
-
 h1{
-text-align:center;
-font-size:40px;
-text-shadow:0 0 20px #00ff88;
-margin-bottom:30px;
-}
+font-size:55px;
+margin-bottom:20px;
 
-p{
-font-size:18px;
-margin:12px 0;
-word-break:break-word;
-}
+text-shadow:
+0 0 10px #00ff88,
+0 0 20px #00ff88,
+0 0 40px #00ff88;
 
-#map{
-height:400px;
-margin-top:20px;
-border-radius:10px;
-overflow:hidden;
-border:2px solid #00ff88;
+animation:glow 1s infinite alternate;
 }
 
 @keyframes glow{
+
 from{
-box-shadow:0 0 10px #00ff88;
+opacity:0.5;
 }
+
 to{
-box-shadow:0 0 30px #00ff88;
+opacity:1;
 }
+
+}
+
+#estado{
+font-size:24px;
+margin-top:20px;
+margin-bottom:20px;
+}
+
+#barra{
+width:350px;
+height:30px;
+border:2px solid #00ff88;
+border-radius:20px;
+overflow:hidden;
+
+box-shadow:
+0 0 20px #00ff88;
+}
+
+#progreso{
+width:0%;
+height:100%;
+background:#00ff88;
+transition:0.2s;
+}
+
+#final{
+display:none;
+font-size:38px;
+margin-top:30px;
+
+text-shadow:
+0 0 10px #00ff88,
+0 0 20px #00ff88;
+
+animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+
+0%{
+transform:scale(1);
+}
+
+50%{
+transform:scale(1.05);
+}
+
+100%{
+transform:scale(1);
+}
+
 }
 
 </style>
-
 </head>
 <body>
 
-<div class="card">
+<canvas id="matrix"></canvas>
 
-<h1>Fuiste doxceado</h1>
+<div id="pantalla">
 
-<p id="ip">🌐 Cargando IP...</p>
+<h1>
+SYSTEM SCAN
+</h1>
 
-<p id="pais">🌍 Cargando país...</p>
+<div id="barra">
 
-<p id="ciudad">🏙 Cargando ciudad...</p>
-
-<p id="device">📱 Detectando dispositivo...</p>
-
-<p id="browser">🖥 Detectando navegador...</p>
-
-<p id="hora">🕒 Cargando hora...</p>
-
-<div id="map"></div>
+<div id="progreso"></div>
 
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<p id="estado">
+Iniciando...
+</p>
 
-<script type="module">
+<div id="final">
+✅ SISTEMA SINCRONIZADO
+</div>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+</div>
 
-import {
-getFirestore,
-collection,
-addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<audio id="scanAudio" autoplay>
 
-const firebaseConfig = {
+<source
+src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8e1b0f0.mp3?filename=computer-processing-6250.mp3"
+type="audio/mpeg">
 
-apiKey: "AIzaSyC8cF8i86iqxCUIlOw1ykd_Civxl1qX2FM",
-authDomain: "osting-1b3f6.firebaseapp.com",
-projectId: "osting-1b3f6",
-storageBucket: "osting-1b3f6.firebasestorage.app",
-messagingSenderId: "1080144262727",
-appId: "1:1080144262727:web:3f42a97c334adb826b2362"
+</audio>
 
-};
+<script>
 
-const app = initializeApp(firebaseConfig);
+// MATRIX
 
-const db = getFirestore(app);
+const canvas =
+document.getElementById("matrix");
 
-async function obtenerInfo(){
+const ctx =
+canvas.getContext("2d");
 
-const res = await fetch("https://ipapi.co/json/");
+canvas.height =
+window.innerHeight;
 
-const data = await res.json();
+canvas.width =
+window.innerWidth;
 
-let dispositivo = "PC";
+const letras =
 
-if(/Android/i.test(navigator.userAgent)){
-dispositivo = "Android";
-}
+"アァイィウヴエカキクケコサシスセソABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
-if(/iPhone|iPad|iPod/i.test(navigator.userAgent)){
-dispositivo = "iPhone";
-}
+const arrayLetras =
+letras.split("");
 
-const hora = new Date().toLocaleString();
+const fontSize = 16;
 
-document.getElementById("ip").innerHTML =
-"🌐 IP: " + data.ip;
+const columns =
+canvas.width / fontSize;
 
-document.getElementById("pais").innerHTML =
-"🌍 País: " + data.country_name;
+const drops = [];
 
-document.getElementById("ciudad").innerHTML =
-"🏙 Ciudad: " + data.city;
+for(let x = 0; x < columns; x++){
 
-document.getElementById("device").innerHTML =
-"📱 Dispositivo: " + dispositivo;
-
-document.getElementById("browser").innerHTML =
-"🖥 Navegador: " + navigator.userAgent;
-
-document.getElementById("hora").innerHTML =
-"🕒 Hora: " + hora;
-
-
-// GUARDAR EN FIREBASE
-
-await addDoc(collection(db,"visitas"),{
-
-ip:data.ip,
-pais:data.country_name,
-ciudad:data.city,
-device:dispositivo,
-navegador:navigator.userAgent,
-hora:hora,
-lat:data.latitude,
-lon:data.longitude
-
-});
-
-
-// MAPA
-
-const map = L.map('map').setView([
-data.latitude,
-data.longitude
-], 10);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-attribution: '&copy; OpenStreetMap'
-}).addTo(map);
-
-L.marker([
-data.latitude,
-data.longitude
-]).addTo(map)
-.bindPopup("Ubicación detectada")
-.openPopup();
+drops[x] = 1;
 
 }
 
-obtenerInfo();
+function draw(){
+
+ctx.fillStyle =
+"rgba(0,0,0,0.05)";
+
+ctx.fillRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+
+ctx.fillStyle =
+"#00ff88";
+
+ctx.font =
+fontSize + "px monospace";
+
+for(let i = 0; i < drops.length; i++){
+
+const text =
+
+arrayLetras[
+Math.floor(
+Math.random() *
+arrayLetras.length
+)
+];
+
+ctx.fillText(
+text,
+i * fontSize,
+drops[i] * fontSize
+);
+
+if(
+drops[i] * fontSize >
+canvas.height
+&& Math.random() > 0.975
+){
+
+drops[i] = 0;
+
+}
+
+drops[i]++;
+
+}
+
+}
+
+setInterval(draw,33);
+
+// FULLSCREEN AUTO
+
+async function fullscreen(){
+
+const el =
+document.documentElement;
+
+if(el.requestFullscreen){
+
+try{
+await el.requestFullscreen();
+}catch(e){}
+
+}
+
+}
+
+// AUTO START
+
+window.onload =
+async function(){
+
+await fullscreen();
+
+const audio =
+document.getElementById("scanAudio");
+
+audio.volume = 0.5;
+
+audio.play().catch(()=>{});
+
+let progreso = 0;
+
+const mensajes = [
+
+"Conectando...",
+
+"Analizando sistema...",
+
+"Verificando datos...",
+
+"Escaneando archivos...",
+
+"Sincronizando...",
+
+"Finalizando..."
+
+];
+
+const intervalo =
+
+setInterval(()=>{
+
+progreso += 5;
+
+progresoDiv.style.width =
+progreso + "%";
+
+const index =
+
+Math.floor(progreso / 20);
+
+estado.innerHTML =
+
+mensajes[index] ||
+"Procesando...";
+
+if(progreso >= 100){
+
+clearInterval(intervalo);
+
+estado.innerHTML =
+"COMPLETADO";
+
+final.style.display =
+"block";
+
+}
+
+},200);
+
+}
+
+const progresoDiv =
+document.getElementById("progreso");
+
+const estado =
+document.getElementById("estado");
+
+const final =
+document.getElementById("final");
 
 </script>
 
